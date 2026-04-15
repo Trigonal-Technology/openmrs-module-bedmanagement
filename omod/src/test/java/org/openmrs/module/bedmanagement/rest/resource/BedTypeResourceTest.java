@@ -2,7 +2,6 @@ package org.openmrs.module.bedmanagement.rest.resource;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -113,7 +112,8 @@ public class BedTypeResourceTest extends MainResourceControllerTest {
 		}
 		catch (Exception e) {
 			Throwable t = e.getCause();
-			assertTrue(t instanceof ConstraintViolationException);
+			assertTrue(t instanceof APIException);
+			assertEquals("Active beds are still assigned to this type.", t.getMessage());
 		}
 	}
 	

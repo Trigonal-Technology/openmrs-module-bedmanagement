@@ -20,6 +20,8 @@ public class BedPatientAssignment extends BaseOpenmrsData {
 	
 	private Encounter encounter;
 	
+	private String bedTypeUuid;
+	
 	public Integer getId() {
 		return id;
 	}
@@ -66,5 +68,13 @@ public class BedPatientAssignment extends BaseOpenmrsData {
 	
 	public void setEncounter(Encounter encounter) {
 		this.encounter = encounter;
+	}
+	
+	public String getBedTypeUuid() {
+		return bedTypeUuid;
+	}
+	
+	public void setBedTypeUuid(String bedTypeUuid) {
+		this.bedTypeUuid = bedTypeUuid;
 	}
 }

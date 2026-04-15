@@ -424,6 +424,13 @@ public class BedManagementDaoImpl implements BedManagementDao {
 	}
 	
 	@Override
+	public Long countActiveBedsByBedType(BedType bedType) {
+		Session session = this.sessionFactory.getCurrentSession();
+		return (Long) session.createQuery("select count(b.id) from Bed b where b.bedType = :bedType and b.voided = false")
+		        .setParameter("bedType", bedType).uniqueResult();
+	}
+	
+	@Override
 	public void deleteBedLocationMapping(BedLocationMapping bedLocationMapping) {
 		Session session = this.sessionFactory.getCurrentSession();
 		session.delete(bedLocationMapping);

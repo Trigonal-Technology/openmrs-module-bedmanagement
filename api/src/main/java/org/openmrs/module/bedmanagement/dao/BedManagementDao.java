@@ -222,6 +222,14 @@ public interface BedManagementDao {
 	void deleteBedType(BedType bedType);
 	
 	/**
+	 * Count active beds linked to bed type.
+	 *
+	 * @param bedType {@link BedType}
+	 * @return active bed count
+	 */
+	Long countActiveBedsByBedType(BedType bedType);
+	
+	/**
 	 * Delete Bed location mapping
 	 *
 	 * @param bedLocationMapping

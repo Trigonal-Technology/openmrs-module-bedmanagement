@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="BM_20260415_01" author="nidan">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="bed_type" columnName="display_name"/>
+        </preConditions>
+        <modifyDataType tableName="bed_type" columnName="display_name" newDataType="varchar(40)"/>
+    </changeSet>
+
+    <changeSet id="BM_20260415_02" author="nidan">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="bed_patient_assignment_map" columnName="bed_type_uuid"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="bed_patient_assignment_map">
+            <column name="bed_type_uuid" type="varchar(38)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

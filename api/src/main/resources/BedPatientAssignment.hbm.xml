@@ -36,6 +36,7 @@
         <many-to-one name="patient" class="org.openmrs.Patient" not-null="true" column="patient_id"/>
         <many-to-one name="bed" class="org.openmrs.module.bedmanagement.entity.Bed" not-null="true" column="bed_id"/>
         <many-to-one name="encounter" class="org.openmrs.Encounter" not-null="true" column="encounter_id"/>
+        <property name="bedTypeUuid" type="java.lang.String" column="bed_type_uuid" length="38"/>
 
         <property name="startDatetime" type="java.util.Date" column="date_started" not-null="true" length="19"/>
         <property name="endDatetime" type="java.util.Date" column="date_stopped" length="19"/>

@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.openmrs.module</groupId>
         <artifactId>bedmanagement</artifactId>
-        <version>7.3.0-SNAPSHOT</version>
+        <version>7.3.0-nidan-SNAPSHOT</version>
     </parent>
 
     <artifactId>bedmanagement-owa</artifactId>
@@ -26,8 +26,8 @@
                             <goal>install-node-and-yarn</goal>
                         </goals>
                         <configuration>
-                            <nodeVersion>v14.7.0</nodeVersion>
-                            <yarnVersion>v1.3.2</yarnVersion>
+                            <nodeVersion>v16.20.2</nodeVersion>
+                            <yarnVersion>v1.22.19</yarnVersion>
                         </configuration>
                     </execution>
 

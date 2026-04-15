@@ -751,4 +751,5 @@
         <comment>Renaming column column_number to bed_column_number in table bed_location_map because column_number is a reserved word in MySQL 8.0.2 and later</comment>
         <renameColumn columnDataType="int" newColumnName="bed_column_number" oldColumnName="column_number" tableName="bed_location_map" />
     </changeSet>
+    <include file="liquibase-bed-billing.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

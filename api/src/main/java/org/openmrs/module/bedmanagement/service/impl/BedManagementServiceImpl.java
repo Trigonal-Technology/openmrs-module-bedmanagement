@@ -136,6 +136,7 @@ public class BedManagementServiceImpl extends BaseOpenmrsService implements BedM
 		bedPatientAssignment.setPatient(patient);
 		bedPatientAssignment.setEncounter(encounter);
 		bedPatientAssignment.setBed(bed);
+		bedPatientAssignment.setBedTypeUuid(bed.getBedType() != null ? bed.getBedType().getUuid() : null);
 		bedPatientAssignment.setStartDatetime(encounter.getEncounterDatetime());
 		bedManagementDao.saveBedPatientAssignment(bedPatientAssignment);
 		
@@ -405,6 +406,9 @@ public class BedManagementServiceImpl extends BaseOpenmrsService implements BedM
 	@Override
 	@Transactional
 	public void deleteBedType(BedType bedType) {
+		if (bedManagementDao.countActiveBedsByBedType(bedType) > 0) {
+			throw new APIException("Active beds are still assigned to this type.");
+		}
 		bedManagementDao.deleteBedType(bedType);
 	}
 	
