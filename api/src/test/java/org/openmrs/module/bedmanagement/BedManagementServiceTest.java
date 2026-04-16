@@ -3,9 +3,13 @@ package org.openmrs.module.bedmanagement;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import java.util.Date;
 import org.openmrs.Encounter;
 import org.openmrs.Location;
 import org.openmrs.Patient;
+import org.openmrs.Visit;
+import org.openmrs.VisitType;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.APIAuthenticationException;
 import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
@@ -57,7 +61,42 @@ public class BedManagementServiceTest extends BaseModuleContextSensitiveTest {
 		patient = Context.getPatientService().getPatient(3);
 		location = Context.getLocationService().getLocation(12347);
 		encounter = Context.getEncounterService().getEncounter(2);
+		attachErOrIpdVisitIfMissing(encounter);
 		bedNumber = "11";
+	}
+	
+	private void attachErOrIpdVisitIfMissing(Encounter enc) {
+		if (enc == null) {
+			return;
+		}
+		Visit vis = enc.getVisit();
+		if (vis != null && vis.getVisitType() != null && vis.getVisitType().getName() != null) {
+			String n = vis.getVisitType().getName().trim();
+			if ("ER".equalsIgnoreCase(n) || "IPD".equalsIgnoreCase(n)) {
+				return;
+			}
+		}
+		VisitService vs = Context.getVisitService();
+		VisitType ipd = null;
+		for (VisitType candidate : vs.getAllVisitTypes()) {
+			if (candidate.getName() != null && "IPD".equalsIgnoreCase(candidate.getName().trim())) {
+				ipd = candidate;
+				break;
+			}
+		}
+		if (ipd == null) {
+			ipd = new VisitType();
+			ipd.setName("IPD");
+			ipd.setDescription("Inpatient");
+			ipd = vs.saveVisitType(ipd);
+		}
+		Visit v = new Visit();
+		v.setPatient(enc.getPatient());
+		v.setVisitType(ipd);
+		v.setStartDatetime(new Date());
+		v = vs.saveVisit(v);
+		enc.setVisit(v);
+		Context.getEncounterService().saveEncounter(enc);
 	}
 	
 	@Test

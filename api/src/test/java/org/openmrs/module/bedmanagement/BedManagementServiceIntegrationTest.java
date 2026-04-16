@@ -3,19 +3,21 @@ package org.openmrs.module.bedmanagement;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import java.util.Date;
+import java.util.List;
 import org.openmrs.Encounter;
 import org.openmrs.Location;
 import org.openmrs.Patient;
+import org.openmrs.Visit;
+import org.openmrs.VisitType;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.EncounterService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.bedmanagement.service.BedManagementService;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
-import org.openmrs.web.test.BaseModuleWebContextSensitiveTest;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -69,6 +71,40 @@ public class BedManagementServiceIntegrationTest extends BaseModuleContextSensit
 		return null;
 	}
 	
+	private void attachErOrIpdVisitIfMissing(Encounter enc) {
+		if (enc == null) {
+			return;
+		}
+		Visit vis = enc.getVisit();
+		if (vis != null && vis.getVisitType() != null && vis.getVisitType().getName() != null) {
+			String n = vis.getVisitType().getName().trim();
+			if ("ER".equalsIgnoreCase(n) || "IPD".equalsIgnoreCase(n)) {
+				return;
+			}
+		}
+		VisitService vs = Context.getVisitService();
+		VisitType ipd = null;
+		for (VisitType candidate : vs.getAllVisitTypes()) {
+			if (candidate.getName() != null && "IPD".equalsIgnoreCase(candidate.getName().trim())) {
+				ipd = candidate;
+				break;
+			}
+		}
+		if (ipd == null) {
+			ipd = new VisitType();
+			ipd.setName("IPD");
+			ipd.setDescription("Inpatient");
+			ipd = vs.saveVisitType(ipd);
+		}
+		Visit v = new Visit();
+		v.setPatient(enc.getPatient());
+		v.setVisitType(ipd);
+		v.setStartDatetime(new Date());
+		v = vs.saveVisit(v);
+		enc.setVisit(v);
+		Context.getEncounterService().saveEncounter(enc);
+	}
+	
 	@Test
 	public void shouldReturnBedAssignmentDetailsByPatient() {
 		PatientService patientService = Context.getPatientService();
@@ -116,7 +152,9 @@ public class BedManagementServiceIntegrationTest extends BaseModuleContextSensit
 		assertNotNull(bedDetails);
 		Assert.assertEquals(11, bedDetails.getBedId());
 		
-		bedManagementService.assignPatientToBed(patient, encountersByPatient.get(0), String.valueOf(bedId));
+		Encounter enc = encountersByPatient.get(0);
+		attachErOrIpdVisitIfMissing(enc);
+		bedManagementService.assignPatientToBed(patient, enc, String.valueOf(bedId));
 		
 		bedDetails = bedManagementService.getBedAssignmentDetailsByPatient(patient);
 		assertEquals(bedId, bedDetails.getBedId());
@@ -142,7 +180,9 @@ public class BedManagementServiceIntegrationTest extends BaseModuleContextSensit
 		assertNull(bedDetails);
 		EncounterService encounterService = Context.getEncounterService();
 		List<Encounter> encountersByPatient = encounterService.getEncountersByPatient(patient);
-		bedManagementService.assignPatientToBed(patient, encountersByPatient.get(0), "10");
+		Encounter enc = encountersByPatient.get(0);
+		attachErOrIpdVisitIfMissing(enc);
+		bedManagementService.assignPatientToBed(patient, enc, "10");
 		BedDetails assigned = bedManagementService.getBedAssignmentDetailsByPatient(patient);
 		assertNotNull(assigned);
 		assertNotNull(assigned.getCurrentAssignments());

@@ -21,6 +21,7 @@ import org.openmrs.Location;
 import org.openmrs.LocationTag;
 import org.openmrs.Patient;
 import org.openmrs.Visit;
+import org.openmrs.VisitType;
 import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.context.Context;
@@ -129,6 +130,20 @@ public class BedManagementServiceImpl extends BaseOpenmrsService implements BedM
 	@Override
 	@Transactional
 	public BedDetails assignPatientToBed(Patient patient, Encounter encounter, String bedId) {
+		if (encounter == null) {
+			throw new APIException("Encounter is required to assign a bed.");
+		}
+		Visit visit = encounter.getVisit();
+		VisitType visitType = visit != null ? visit.getVisitType() : null;
+		if (visitType == null || visitType.getName() == null) {
+			throw new APIException(
+			        Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentVisitTypeRequired"));
+		}
+		String visitTypeName = visitType.getName().trim();
+		if (!"ER".equalsIgnoreCase(visitTypeName) && !"IPD".equalsIgnoreCase(visitTypeName)) {
+			throw new APIException(
+			        Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentErIpdOnly"));
+		}
 		BedDetails prev = getBedManagementService().unAssignPatientFromBed(patient);
 		Bed bed = bedManagementDao.getBedById(Integer.parseInt(bedId));
 		

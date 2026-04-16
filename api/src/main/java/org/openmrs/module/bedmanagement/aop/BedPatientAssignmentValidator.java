@@ -19,6 +19,8 @@ import java.util.List;
 import org.openmrs.Encounter;
 import org.openmrs.Patient;
 import org.openmrs.Visit;
+import org.openmrs.VisitType;
+import org.openmrs.api.context.Context;
 import org.openmrs.annotation.Handler;
 import org.openmrs.module.bedmanagement.entity.BedPatientAssignment;
 import org.openmrs.module.bedmanagement.service.BedManagementService;
@@ -51,8 +53,23 @@ public class BedPatientAssignmentValidator implements Validator {
 		Date bedAssignmentStartTime = bpa.getStartDatetime();
 		Date bedAssignmentEndTime = bpa.getEndDatetime();
 		Encounter assigningEncounter = bpa.getEncounter();
-		Visit visit = assigningEncounter.getVisit();
 		Patient patient = bpa.getPatient();
+		if (assigningEncounter == null) {
+			errors.rejectValue("encounter", "general.required", "Encounter is required for a bed assignment.");
+			return;
+		}
+		Visit visit = assigningEncounter.getVisit();
+		VisitType visitType = visit != null ? visit.getVisitType() : null;
+		if (visitType == null || visitType.getName() == null) {
+			errors.reject("bedmanagement.error.bedAssignmentVisitTypeRequired",
+			    Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentVisitTypeRequired"));
+		} else {
+			String visitTypeName = visitType.getName().trim();
+			if (!"ER".equalsIgnoreCase(visitTypeName) && !"IPD".equalsIgnoreCase(visitTypeName)) {
+				errors.reject("bedmanagement.error.bedAssignmentErIpdOnly",
+				    Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentErIpdOnly"));
+			}
+		}
 		
 		if (bedAssignmentEndTime != null && bedAssignmentEndTime.before(bedAssignmentStartTime)) {
 			errors.rejectValue("endDatetime", "bedPatientAssignment.endDatetime.beforeStartDatetime",
