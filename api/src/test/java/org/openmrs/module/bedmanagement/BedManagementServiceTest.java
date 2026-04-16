@@ -21,6 +21,7 @@ import org.openmrs.module.bedmanagement.entity.BedLocationMapping;
 import org.openmrs.module.bedmanagement.entity.BedPatientAssignment;
 import org.openmrs.module.bedmanagement.entity.BedTag;
 import org.openmrs.module.bedmanagement.service.BedManagementService;
+import org.openmrs.module.bedmanagement.util.VisitTypeSupport;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -71,8 +72,7 @@ public class BedManagementServiceTest extends BaseModuleContextSensitiveTest {
 		}
 		Visit vis = enc.getVisit();
 		if (vis != null && vis.getVisitType() != null && vis.getVisitType().getName() != null) {
-			String n = vis.getVisitType().getName().trim();
-			if ("ER".equalsIgnoreCase(n) || "IPD".equalsIgnoreCase(n)) {
+			if (VisitTypeSupport.isErOrIpdVisitType(vis.getVisitType())) {
 				return;
 			}
 		}

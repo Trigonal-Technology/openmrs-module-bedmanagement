@@ -24,6 +24,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.annotation.Handler;
 import org.openmrs.module.bedmanagement.entity.BedPatientAssignment;
 import org.openmrs.module.bedmanagement.service.BedManagementService;
+import org.openmrs.module.bedmanagement.util.VisitTypeSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.Errors;
@@ -64,8 +65,7 @@ public class BedPatientAssignmentValidator implements Validator {
 			errors.reject("bedmanagement.error.bedAssignmentVisitTypeRequired",
 			    Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentVisitTypeRequired"));
 		} else {
-			String visitTypeName = visitType.getName().trim();
-			if (!"ER".equalsIgnoreCase(visitTypeName) && !"IPD".equalsIgnoreCase(visitTypeName)) {
+			if (!VisitTypeSupport.isErOrIpdVisitType(visitType)) {
 				errors.reject("bedmanagement.error.bedAssignmentErIpdOnly",
 				    Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentErIpdOnly"));
 			}

@@ -38,6 +38,7 @@ import org.openmrs.module.bedmanagement.entity.BedTag;
 import org.openmrs.module.bedmanagement.entity.BedType;
 import org.openmrs.module.bedmanagement.exception.BedOccupiedException;
 import org.openmrs.module.bedmanagement.service.BedManagementService;
+import org.openmrs.module.bedmanagement.util.VisitTypeSupport;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -139,8 +140,7 @@ public class BedManagementServiceImpl extends BaseOpenmrsService implements BedM
 			throw new APIException(
 			        Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentVisitTypeRequired"));
 		}
-		String visitTypeName = visitType.getName().trim();
-		if (!"ER".equalsIgnoreCase(visitTypeName) && !"IPD".equalsIgnoreCase(visitTypeName)) {
+		if (!VisitTypeSupport.isErOrIpdVisitType(visitType)) {
 			throw new APIException(
 			        Context.getMessageSourceService().getMessage("bedmanagement.error.bedAssignmentErIpdOnly"));
 		}

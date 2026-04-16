@@ -8,14 +8,17 @@ import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.openmrs.Encounter;
 import org.openmrs.Patient;
 import org.openmrs.Visit;
+import org.openmrs.VisitType;
 import org.openmrs.api.ValidationException;
 import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.bedmanagement.entity.Bed;
 import org.openmrs.module.bedmanagement.entity.BedPatientAssignment;
 import org.openmrs.module.bedmanagement.service.BedManagementService;
+import org.openmrs.module.bedmanagement.util.VisitTypeSupport;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,10 +33,47 @@ public class BedPatientAssignmentValidatorTest extends BaseModuleContextSensitiv
 		executeDataSet("bedManagementDAOComponentTestDataset.xml");
 	}
 	
+	private void ensureErOrIpdVisitOnAssignment(BedPatientAssignment bpa) {
+		if (bpa == null || bpa.getEncounter() == null) {
+			return;
+		}
+		Encounter encounter = bpa.getEncounter();
+		VisitService visitService = Context.getVisitService();
+		VisitType visitTypeToUse = null;
+		for (VisitType candidate : visitService.getAllVisitTypes()) {
+			if (VisitTypeSupport.isErOrIpdVisitType(candidate)) {
+				visitTypeToUse = candidate;
+				break;
+			}
+		}
+		if (visitTypeToUse == null) {
+			visitTypeToUse = new VisitType();
+			visitTypeToUse.setName("IPD");
+			visitTypeToUse.setDescription("Inpatient");
+			visitTypeToUse = visitService.saveVisitType(visitTypeToUse);
+		}
+		Visit visit = encounter.getVisit();
+		if (visit != null) {
+			if (!VisitTypeSupport.isErOrIpdVisitType(visit.getVisitType())) {
+				visit.setVisitType(visitTypeToUse);
+				visitService.saveVisit(visit);
+			}
+			return;
+		}
+		Visit visitToUse = new Visit();
+		visitToUse.setPatient(encounter.getPatient());
+		visitToUse.setStartDatetime(encounter.getEncounterDatetime());
+		visitToUse.setVisitType(visitTypeToUse);
+		visitToUse = visitService.saveVisit(visitToUse);
+		encounter.setVisit(visitToUse);
+		Context.getEncounterService().saveEncounter(encounter);
+	}
+	
 	@Test
 	public void testExceptionThrownWhenBedAssignmentEndtimeBeforeStarttime() {
 		BedPatientAssignment bpa = bedManagementService
 		        .getBedPatientAssignmentByUuid("10011001-1001-1001-1001-100000000001");
+		ensureErOrIpdVisitOnAssignment(bpa);
 		
 		assertThrows(ValidationException.class, () -> {
 			Date startTime = bpa.getStartDatetime();
@@ -49,6 +89,7 @@ public class BedPatientAssignmentValidatorTest extends BaseModuleContextSensitiv
 		Visit visit = visitService.getVisit(1001);
 		BedPatientAssignment bpa = bedManagementService
 		        .getBedPatientAssignmentByUuid("10011001-1001-1001-1001-100000000001");
+		ensureErOrIpdVisitOnAssignment(bpa);
 		
 		assertThrows(ValidationException.class, () -> {
 			Date now = new Date();
@@ -63,6 +104,7 @@ public class BedPatientAssignmentValidatorTest extends BaseModuleContextSensitiv
 	public void testExceptionThrownWhenMultipleActiveBedsAssignedToPatient() {
 		BedPatientAssignment bpa = bedManagementService
 		        .getBedPatientAssignmentByUuid("10011001-1001-1001-1001-100000000001");
+		ensureErOrIpdVisitOnAssignment(bpa);
 		Patient patient = bpa.getPatient();
 		Bed bed = bedManagementService.getBedById(13);
 		assertNull(bpa.getEndDatetime());
@@ -81,6 +123,7 @@ public class BedPatientAssignmentValidatorTest extends BaseModuleContextSensitiv
 	public void testExceptionNotThrownWhenSavingEndedBedsAssignment() {
 		BedPatientAssignment bpa = bedManagementService
 		        .getBedPatientAssignmentByUuid("10011001-1001-1001-1001-100000000001");
+		ensureErOrIpdVisitOnAssignment(bpa);
 		Patient patient = bpa.getPatient();
 		Bed bed = bedManagementService.getBedById(13);
 		bedManagementService.saveBedPatientAssignment(bpa);
